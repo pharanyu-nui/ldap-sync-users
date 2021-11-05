@@ -1,0 +1,8 @@
+version: '3.7'
+
+services:
+  sync_users:
+    build: sync_users
+    restart: always
+    volumes:
+      - ./sync_users:/opt/app
