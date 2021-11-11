@@ -40,3 +40,13 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
 def generate_timestamp_filename(type='json') -> str:
     filename = datetime.now().strftime("%Y_%m_%d-%I_%M_%S")
     return f'{filename}.{type}'
+
+
+def clear_dir(dir_path: str):
+    for f in os.listdir(dir_path):
+        os.remove(os.path.join(dir_path, f))
+
+
+def create_dir_if_not_exist(dir_path: str):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
