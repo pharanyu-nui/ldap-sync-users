@@ -3,3 +3,4 @@ tmp.py
 *.json
 *.log
 venv
+.DS_Store
