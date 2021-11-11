@@ -10,6 +10,8 @@ from utils import (
 
 load_dotenv()
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 SFTP_PROD_IP = os.getenv('SFTP_PROD_IP')
 SFTP_DEV_IP = os.getenv('SFTP_DEV_IP')
 SFTP_PORT = int(os.getenv('SFTP_PORT'))
@@ -27,8 +29,8 @@ SEARCH_FILTER=os.getenv('LDAP_SEARCH_FILTER')
 SEARCH_ATTRIBUTES = ['distinguishedName', 'sAMAccountName', 'givenName', 'sn', 'mail', 'department']
 SEARCH_PAGE_SIZE = 1000
 
-BACKUP_DIR_PATH = './backup'
-LOG_DIR_PATH = './logs'
+BACKUP_DIR_PATH = os.path.join(ROOT_DIR, 'backup')
+LOG_DIR_PATH = os.path.join(ROOT_DIR, 'logs')
 
 
 def query_user_data(execute_data_fn):
