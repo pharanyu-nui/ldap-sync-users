@@ -46,16 +46,16 @@ def query_user_data(execute_data_fn):
     conn.bind()
     print(f'==> connect LDAP server "{LDAP_HOST}:{LDAP_PORT}"')
 
-    entry_generator = conn.extend.standard.paged_search(
+    conn.extend.standard.paged_search(
         LDAP_BASE, 
         SEARCH_FILTER, 
         attributes=SEARCH_ATTRIBUTES, 
         paged_size=SEARCH_PAGE_SIZE,
-        generator=True,
+        generator=False,
     )
     print('==> query users from LDAP')
 
-    execute_data_fn(entry_generator)
+    execute_data_fn(conn.entries)
 
     conn.unbind()
 
@@ -71,8 +71,8 @@ def write_json_file(entry_generator) -> str:
         print('[', file=outfile)
 
         for entry in entry_generator:
-            user_data = dict(entry['attributes'])
-            json.dump(user_data, outfile, indent=4)
+            user_data_dict = json.loads(entry.entry_to_json())
+            json.dump(user_data_dict, outfile, indent=4)
             print(',', file=outfile)
 
     truncate_utf8_chars(file_path, 1)
