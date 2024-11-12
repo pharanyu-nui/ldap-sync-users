@@ -14,10 +14,12 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 SFTP_PROD_IP = os.getenv('SFTP_PROD_IP')
 SFTP_DEV_IP = os.getenv('SFTP_DEV_IP')
-SFTP_PORT = int(os.getenv('SFTP_PORT'))
+SFTP_PROD_PORT = int(os.getenv('SFTP_PROD_PORT'))
+SFTP_DEV_PORT = int(os.getenv('SFTP_DEV_PORT'))
 SFTP_USER = os.getenv('SFTP_USER')
 SFTP_PASSWORD = os.getenv('SFTP_PASSWORD')
-SFTP_TARGET_DIR_PATH = './upload'
+SFTP_PROD_TARGET_DIR_PATH = './upload'
+SFTP_DEV_TARGET_DIR_PATH = './files'
 
 LDAP_HOST = os.getenv('LDAP_HOST')
 LDAP_PORT = int(os.getenv('LDAP_PORT'))
@@ -83,34 +85,44 @@ def write_json_file(entry_generator) -> str:
     return file_path
 
 
-def send_file_to_sftp_server(file_path: str):
-    sftp_servers = list(filter(lambda x: x != '', [SFTP_PROD_IP, SFTP_DEV_IP]))
+def send_file_to_sftp_server(file_path: str, ip_address: str, port: int, target_path: str):
+    cnopts = pysftp.CnOpts()
+    cnopts.hostkeys = None
 
-    for sftp_ip in sftp_servers:
-        cnopts = pysftp.CnOpts()
-        cnopts.hostkeys = None
-        connection_config = {
-            'host': sftp_ip,
-            'port': SFTP_PORT,
-            'username': SFTP_USER,
-            'password': SFTP_PASSWORD,
-            'cnopts': cnopts,
-        }
-        with pysftp.Connection(**connection_config) as sftp:
-            print(f'==> connect SFTP server "{sftp_ip}:{SFTP_PORT}"')
-            if not sftp.exists(SFTP_TARGET_DIR_PATH):
-                raise Exception(f'"{SFTP_TARGET_DIR_PATH}" doesn\'t exists on SFTP server.')
+    connection_config = {
+        'host': ip_address,
+        'port': port,
+        'username': SFTP_USER,
+        'password': SFTP_PASSWORD,
+        'cnopts': cnopts,
+    }
 
-            filename = os.path.basename(file_path)
-            local_file_path = file_path
-            remote_file_path = os.path.join(SFTP_TARGET_DIR_PATH, filename)
-            sftp.put(local_file_path, remote_file_path)
-            print(f'==> copy file "{local_file_path}" to SFTP server')
+    with pysftp.Connection(**connection_config) as sftp:
+        print(f'==> connect SFTP server "{ip_address}:{port}"')
+        if not sftp.exists(target_path):
+            raise Exception(f'"{target_path}" doesn\'t exists on SFTP server.')
+
+        filename = os.path.basename(file_path)
+        local_file_path = file_path
+        remote_file_path = os.path.join(target_path, filename)
+        sftp.put(local_file_path, remote_file_path)
+        print(f'==> copy file "{local_file_path}" to SFTP server')
 
 
 def process_user_data(entry_generator):
     filename = write_json_file(entry_generator)
-    send_file_to_sftp_server(filename)
+    send_file_to_sftp_server(
+        file_path=filename,
+        ip_address=SFTP_PROD_IP,
+        port=SFTP_PROD_PORT,
+        target_path=SFTP_PROD_TARGET_DIR_PATH
+    )
+    send_file_to_sftp_server(
+        file_path=filename,
+        ip_address=SFTP_DEV_IP,
+        port=SFTP_DEV_PORT,
+        target_path=SFTP_DEV_TARGET_DIR_PATH
+    )
 
 
 def write_error_log(err):
